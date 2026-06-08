@@ -173,6 +173,17 @@ async function shutdown() {
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
 
+server.on("error", (error) => {
+  if (error.code === "EADDRINUSE") {
+    console.error(`Port ${port} is already in use.`);
+    console.error("Stop the old dev server or run: npm run free-port");
+    console.error("You can also use another port, for example: $env:PORT='3001'; npm run dev");
+    process.exit(1);
+  }
+
+  throw error;
+});
+
 server.listen(port, () => {
   console.log(`Remote browser app ready at http://${hostname}:${port}`);
 });

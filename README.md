@@ -110,6 +110,7 @@ Keep the recording focused on the working behavior. The form can explain the tec
 
 ## Troubleshooting
 
+- If `npm run dev` says port `3000` is already in use, run `npm run free-port` and then start again.
 - If `npm run preflight` fails at Docker daemon, Docker Desktop is installed but not running.
 - If starting fails with a Docker socket or named pipe error, start Docker Desktop and try again.
 - If the first start is slow, the Chromium Docker image is probably building.
