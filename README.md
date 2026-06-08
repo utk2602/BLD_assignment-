@@ -18,7 +18,7 @@ The project is built around a simple idea: the React UI is the operator panel, t
 1. The React UI calls `POST /api/browser/start`.
 2. The Node server checks whether the local Chromium Docker image exists.
 3. If the image is missing, the server builds it from `Dockerfile.browser`.
-4. Docker starts a Chromium container with DevTools Protocol exposed on port `9222`.
+4. Docker starts a Chromium container with DevTools Protocol forwarded to the host.
 5. The server connects to Chromium through `puppeteer-core`.
 6. Chromium sends screencast frames through CDP.
 7. The server forwards those frames to the React UI over WebSocket.

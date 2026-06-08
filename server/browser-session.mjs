@@ -3,8 +3,8 @@ import Docker from "dockerode";
 import puppeteer from "puppeteer-core";
 
 const IMAGE_TAG = "bld-remote-chromium:local";
-const CONTAINER_PORT = "9222/tcp";
-const DEFAULT_URL = "https://example.com";
+const CONTAINER_PORT = "9223/tcp";
+const DEFAULT_URL = "https://utkarsh-dev.vercel.app/";
 const MAX_SCROLL_DELTA = 1800;
 const MODIFIER_KEYS = ["Control", "Alt", "Shift", "Meta"];
 const CONTAINER_LABEL = "teambld.remote-browser";
@@ -166,6 +166,21 @@ async function waitForCdp(port) {
   throw new Error("Chromium did not expose the DevTools endpoint in time");
 }
 
+async function browserWebSocketEndpoint(port) {
+  const response = await fetch(`http://127.0.0.1:${port}/json/version`);
+
+  if (!response.ok) {
+    throw new Error("Chromium DevTools version endpoint is not reachable");
+  }
+
+  const version = await response.json();
+  const endpoint = new URL(version.webSocketDebuggerUrl);
+  endpoint.hostname = "127.0.0.1";
+  endpoint.port = String(port);
+
+  return endpoint.toString();
+}
+
 export class BrowserSession {
   constructor({ onFrame, onStatus }) {
     this.onFrame = onFrame;
@@ -247,7 +262,7 @@ export class BrowserSession {
       await waitForCdp(this.hostPort);
 
       this.browser = await puppeteer.connect({
-        browserURL: `http://127.0.0.1:${this.hostPort}`,
+        browserWSEndpoint: await browserWebSocketEndpoint(this.hostPort),
         defaultViewport: VIEWPORT
       });
 
