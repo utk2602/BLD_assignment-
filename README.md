@@ -48,6 +48,14 @@ Copy-Item .env.example .env.local
 
 Optional: pre-build the browser image before recording:
 
+Run a quick local preflight first:
+
+```bash
+npm run preflight
+```
+
+Then build the browser image:
+
 ```bash
 npm run browser:build
 ```
@@ -102,6 +110,7 @@ Keep the recording focused on the working behavior. The form can explain the tec
 
 ## Troubleshooting
 
+- If `npm run preflight` fails at Docker daemon, Docker Desktop is installed but not running.
 - If starting fails with a Docker socket or named pipe error, start Docker Desktop and try again.
 - If the first start is slow, the Chromium Docker image is probably building.
 - If typing does nothing, click once inside the browser viewport so it receives keyboard focus.
