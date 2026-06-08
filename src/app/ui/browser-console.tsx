@@ -5,6 +5,7 @@ import {
   Activity,
   ArrowLeft,
   ArrowRight,
+  Download,
   Globe2,
   Keyboard,
   Loader2,
@@ -371,6 +372,18 @@ export function BrowserConsole() {
     });
   }
 
+  function handleDownloadFrame() {
+    if (!frame) {
+      setNotice("No browser frame is available yet");
+      return;
+    }
+
+    const link = document.createElement("a");
+    link.href = frame;
+    link.download = `remote-browser-${Date.now()}.jpg`;
+    link.click();
+  }
+
   return (
     <main className="app-shell">
       <section className="workspace">
@@ -425,6 +438,9 @@ export function BrowserConsole() {
           </form>
           <button className="icon-action" disabled={!running || isNavigating} onClick={handleReload} title="Reload page" type="button">
             <RefreshCcw aria-hidden="true" size={16} />
+          </button>
+          <button className="icon-action" disabled={!frame} onClick={handleDownloadFrame} title="Download latest frame" type="button">
+            <Download aria-hidden="true" size={16} />
           </button>
         </div>
 
