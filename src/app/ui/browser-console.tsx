@@ -44,7 +44,7 @@ const DEFAULT_STATUS: BrowserStatus = {
   error: null,
   containerId: null,
   cdpPort: null,
-  currentUrl: "https://example.com",
+  currentUrl: "https://utkarsh-dev.vercel.app/",
   dockerSocket: "local Docker socket",
   imageTag: "bld-remote-chromium:local",
   pageTitle: "",
@@ -425,7 +425,7 @@ export function BrowserConsole() {
               aria-label="Browser URL"
               disabled={!running}
               onChange={(event) => setUrl(event.target.value)}
-              placeholder="https://example.com"
+              placeholder="https://utkarsh-dev.vercel.app/"
               value={url}
             />
             <button disabled={!running || isNavigating} title="Navigate" type="submit">
