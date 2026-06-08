@@ -354,6 +354,11 @@ export class BrowserSession {
 
     if (message.type === "key") {
       await this.handleKey(message);
+      return;
+    }
+
+    if (message.type === "paste") {
+      await this.handlePaste(message);
     }
   }
 
@@ -441,6 +446,14 @@ export class BrowserSession {
         await this.page.keyboard.up(modifier);
       }
     }
+  }
+
+  async handlePaste(message) {
+    if (typeof message.text !== "string" || message.text.length === 0) {
+      return;
+    }
+
+    await this.page.keyboard.type(message.text.slice(0, 4000));
   }
 
   async stop({ quiet = false } = {}) {

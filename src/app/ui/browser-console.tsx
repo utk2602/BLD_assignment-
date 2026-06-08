@@ -13,7 +13,7 @@ import {
   Square,
   TerminalSquare
 } from "lucide-react";
-import { FormEvent, KeyboardEvent, PointerEvent, WheelEvent, useEffect, useRef, useState } from "react";
+import { ClipboardEvent, FormEvent, KeyboardEvent, PointerEvent, WheelEvent, useEffect, useRef, useState } from "react";
 
 type BrowserStatus = {
   state: "idle" | "starting" | "running" | "stopping" | "error";
@@ -328,6 +328,24 @@ export function BrowserConsole() {
     });
   }
 
+  function handlePaste(event: ClipboardEvent<HTMLDivElement>) {
+    if (!running) {
+      return;
+    }
+
+    const text = event.clipboardData.getData("text/plain");
+
+    if (!text) {
+      return;
+    }
+
+    event.preventDefault();
+    send({
+      type: "paste",
+      text
+    });
+  }
+
   function handleNavigate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsNavigating(true);
@@ -424,6 +442,7 @@ export function BrowserConsole() {
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
+          onPaste={handlePaste}
           onWheel={handleWheel}
           ref={viewportRef}
           tabIndex={0}
