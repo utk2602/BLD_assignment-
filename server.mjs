@@ -33,6 +33,15 @@ const browserSession = new BrowserSession({
 async function handleApiRequest(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
+  if (req.method === "GET" && url.pathname === "/api/health") {
+    sendJson(res, 200, {
+      ok: true,
+      uptime: process.uptime(),
+      browser: browserSession.getStatus()
+    });
+    return true;
+  }
+
   if (req.method === "GET" && url.pathname === "/api/browser/status") {
     sendJson(res, 200, browserSession.getStatus());
     return true;

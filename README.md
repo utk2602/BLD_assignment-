@@ -62,6 +62,16 @@ http://localhost:3000
 - Type into a focused input on the remote page.
 - Click **Stop** and confirm the session returns to idle.
 
+## Local Health Check
+
+The server exposes a small health endpoint:
+
+```txt
+GET /api/health
+```
+
+It returns server uptime and the current browser session status. This is useful for checking whether the Node server is alive before debugging Docker or Chromium.
+
 
 ## Known Limits
 
