@@ -52,6 +52,18 @@ Open:
 http://localhost:3000
 ```
 
+Optional viewport override:
+
+```bash
+BROWSER_WIDTH=1440 BROWSER_HEIGHT=900 npm run dev
+```
+
+On Windows PowerShell:
+
+```powershell
+$env:BROWSER_WIDTH="1440"; $env:BROWSER_HEIGHT="900"; npm run dev
+```
+
 ## Demo Checklist
 
 - Click **Start Browser**.

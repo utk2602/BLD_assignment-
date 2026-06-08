@@ -5,9 +5,23 @@ import puppeteer from "puppeteer-core";
 const IMAGE_TAG = "bld-remote-chromium:local";
 const CONTAINER_PORT = "9222/tcp";
 const DEFAULT_URL = "https://example.com";
-const VIEWPORT = { width: 1365, height: 768 };
 const MAX_SCROLL_DELTA = 1800;
 const MODIFIER_KEYS = ["Control", "Alt", "Shift", "Meta"];
+
+function envInt(name, fallback) {
+  const value = Number(process.env[name]);
+
+  if (!Number.isInteger(value) || value <= 0) {
+    return fallback;
+  }
+
+  return value;
+}
+
+const VIEWPORT = {
+  width: envInt("BROWSER_WIDTH", 1365),
+  height: envInt("BROWSER_HEIGHT", 768)
+};
 
 function dockerSocketPath() {
   if (process.env.DOCKER_SOCKET) {
