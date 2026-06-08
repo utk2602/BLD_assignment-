@@ -149,6 +149,8 @@ export class BrowserSession {
     this.page = null;
     this.cdp = null;
     this.currentUrl = DEFAULT_URL;
+    this.pageTitle = "";
+    this.lastNavigationAt = null;
   }
 
   getStatus() {
@@ -160,6 +162,8 @@ export class BrowserSession {
       currentUrl: this.currentUrl,
       dockerSocket: dockerSocketPath(),
       imageTag: IMAGE_TAG,
+      pageTitle: this.pageTitle,
+      lastNavigationAt: this.lastNavigationAt,
       viewport: VIEWPORT
     };
   }
@@ -219,6 +223,7 @@ export class BrowserSession {
         waitUntil: "domcontentloaded",
         timeout: 20_000
       });
+      await this.capturePageMetadata();
 
       await this.startScreencast();
       this.setState("running");
@@ -268,9 +273,19 @@ export class BrowserSession {
       waitUntil: "domcontentloaded",
       timeout: 20_000
     });
+    await this.capturePageMetadata();
 
     this.onStatus?.(this.getStatus());
     return this.getStatus();
+  }
+
+  async capturePageMetadata() {
+    if (!this.page) {
+      return;
+    }
+
+    this.pageTitle = await this.page.title().catch(() => "");
+    this.lastNavigationAt = new Date().toISOString();
   }
 
   async handleInput(message) {

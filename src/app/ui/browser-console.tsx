@@ -23,6 +23,8 @@ type BrowserStatus = {
   currentUrl: string;
   dockerSocket: string;
   imageTag: string;
+  pageTitle: string;
+  lastNavigationAt: string | null;
   viewport: {
     width: number;
     height: number;
@@ -42,6 +44,8 @@ const DEFAULT_STATUS: BrowserStatus = {
   currentUrl: "https://example.com",
   dockerSocket: "local Docker socket",
   imageTag: "bld-remote-chromium:local",
+  pageTitle: "",
+  lastNavigationAt: null,
   viewport: {
     width: 1365,
     height: 768
@@ -70,12 +74,16 @@ export function BrowserConsole() {
   const [notice, setNotice] = useState<string | null>(null);
   const [framesReceived, setFramesReceived] = useState(0);
   const [lastFrameAt, setLastFrameAt] = useState<string>("never");
+  const [isNavigating, setIsNavigating] = useState(false);
   const socketRef = useRef<WebSocket | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
 
   const busy = status.state === "starting" || status.state === "stopping";
   const running = status.state === "running";
   const shortContainerId = status.containerId ? status.containerId.slice(0, 12) : "none";
+  const lastNavigationLabel = status.lastNavigationAt
+    ? new Date(status.lastNavigationAt).toLocaleTimeString()
+    : "never";
 
   useEffect(() => {
     let closedByEffect = false;
@@ -107,6 +115,7 @@ export function BrowserConsole() {
           if (message.type === "status") {
             setStatus(message.status);
             setUrl(message.status.currentUrl || DEFAULT_STATUS.currentUrl);
+            setIsNavigating(false);
             return;
           }
 
@@ -123,6 +132,7 @@ export function BrowserConsole() {
           }
 
           if (message.type === "error") {
+            setIsNavigating(false);
             setNotice(message.error);
           }
         } catch {
@@ -194,6 +204,7 @@ export function BrowserConsole() {
 
     if (!socket || socket.readyState !== WebSocket.OPEN) {
       setNotice("WebSocket is not connected yet");
+      setIsNavigating(false);
       return;
     }
 
@@ -282,6 +293,7 @@ export function BrowserConsole() {
 
   function handleNavigate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setIsNavigating(true);
     send({
       type: "navigate",
       url
@@ -323,8 +335,12 @@ export function BrowserConsole() {
               placeholder="https://example.com"
               value={url}
             />
-            <button disabled={!running} title="Navigate" type="submit">
-              <RefreshCcw aria-hidden="true" size={16} />
+            <button disabled={!running || isNavigating} title="Navigate" type="submit">
+              {isNavigating ? (
+                <Loader2 aria-hidden="true" className="spin" size={16} />
+              ) : (
+                <RefreshCcw aria-hidden="true" size={16} />
+              )}
             </button>
           </form>
         </div>
@@ -353,6 +369,8 @@ export function BrowserConsole() {
             Frames: {framesReceived}
           </span>
           <span>Last Frame: {lastFrameAt}</span>
+          <span>Last Nav: {lastNavigationLabel}</span>
+          <span>Title: {status.pageTitle || "blank"}</span>
         </div>
 
         {(notice || status.error) && (
