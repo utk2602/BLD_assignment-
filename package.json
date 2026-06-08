@@ -1,0 +1,30 @@
+{
+  "name": "bld-remote-browser",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.mjs",
+    "build": "next build",
+    "browser:build": "docker build -f Dockerfile.browser -t bld-remote-chromium:local .",
+    "start": "NODE_ENV=production node server.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "dockerode": "^4.0.4",
+    "lucide-react": "^0.468.0",
+    "next": "^15.0.3",
+    "puppeteer-core": "^23.9.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/dockerode": "^3.3.34",
+    "@types/node": "^22.10.1",
+    "@types/react": "^19.0.1",
+    "@types/react-dom": "^19.0.1",
+    "@types/ws": "^8.5.13",
+    "typescript": "^5.7.2"
+  }
+}

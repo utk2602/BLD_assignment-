@@ -1,0 +1,25 @@
+FROM debian:bookworm-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    chromium \
+    fonts-liberation \
+    fonts-noto-color-emoji \
+  && rm -rf /var/lib/apt/lists/*
+
+EXPOSE 9222
+
+CMD ["chromium", \
+  "--headless=new", \
+  "--no-sandbox", \
+  "--disable-dev-shm-usage", \
+  "--disable-gpu", \
+  "--window-size=1365,768", \
+  "--remote-debugging-address=0.0.0.0", \
+  "--remote-debugging-port=9222", \
+  "--remote-allow-origins=*", \
+  "about:blank"]
+
