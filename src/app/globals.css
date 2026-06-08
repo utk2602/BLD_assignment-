@@ -215,10 +215,28 @@ h1 {
 }
 
 .meta-strip span,
+.session-strip span,
 .notice {
   display: inline-flex;
   align-items: center;
   gap: 7px;
+}
+
+.session-strip {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: #475467;
+  font-size: 0.82rem;
+}
+
+.session-strip span {
+  min-height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.68);
+  padding: 5px 10px;
+  font-weight: 700;
 }
 
 .notice {
@@ -318,4 +336,3 @@ h1 {
     flex: 1;
   }
 }
-

@@ -3,6 +3,7 @@ node_modules
 dist
 coverage
 *.tsbuildinfo
+docs/
 .env
 .env.local
 .env.*.local

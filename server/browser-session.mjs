@@ -6,6 +6,7 @@ const IMAGE_TAG = "bld-remote-chromium:local";
 const CONTAINER_PORT = "9222/tcp";
 const DEFAULT_URL = "https://example.com";
 const VIEWPORT = { width: 1365, height: 768 };
+const MAX_SCROLL_DELTA = 1800;
 
 function dockerSocketPath() {
   if (process.env.DOCKER_SOCKET) {
@@ -24,6 +25,30 @@ const docker = new Docker({
 });
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function formatDockerError(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  const lower = message.toLowerCase();
+
+  if (
+    lower.includes("dockerdesktoplinuxengine") ||
+    lower.includes("docker_engine") ||
+    lower.includes("connect") ||
+    lower.includes("pipe")
+  ) {
+    return `Docker is not reachable. Start Docker Desktop and try again. Details: ${message}`;
+  }
+
+  return message;
+}
+
+function isFiniteNumber(value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
 
 function normalizeUrl(value) {
   if (!value || typeof value !== "string") {
@@ -78,8 +103,13 @@ function runDockerBuild() {
 
 async function ensureBrowserImage() {
   try {
+    await docker.ping();
     await docker.getImage(IMAGE_TAG).inspect();
-  } catch {
+  } catch (error) {
+    if (formatDockerError(error).startsWith("Docker is not reachable")) {
+      throw new Error(formatDockerError(error));
+    }
+
     await runDockerBuild();
   }
 }
@@ -127,6 +157,8 @@ export class BrowserSession {
       containerId: this.containerId,
       cdpPort: this.hostPort,
       currentUrl: this.currentUrl,
+      dockerSocket: dockerSocketPath(),
+      imageTag: IMAGE_TAG,
       viewport: VIEWPORT
     };
   }
@@ -192,7 +224,7 @@ export class BrowserSession {
       return this.getStatus();
     } catch (error) {
       await this.stop({ quiet: true });
-      this.setState("error", error instanceof Error ? error.message : String(error));
+      this.setState("error", formatDockerError(error));
       return this.getStatus();
     }
   }
@@ -246,21 +278,32 @@ export class BrowserSession {
     }
 
     if (message.type === "mouse.click") {
-      await this.page.mouse.click(message.x, message.y, {
+      const point = this.toSafePoint(message);
+
+      if (!point) {
+        return;
+      }
+
+      await this.page.mouse.click(point.x, point.y, {
         button: message.button || "left"
       });
       return;
     }
 
     if (message.type === "mouse.move") {
-      await this.page.mouse.move(message.x, message.y);
+      const point = this.toSafePoint(message);
+
+      if (point) {
+        await this.page.mouse.move(point.x, point.y);
+      }
+
       return;
     }
 
     if (message.type === "scroll") {
       await this.page.mouse.wheel({
-        deltaX: message.deltaX || 0,
-        deltaY: message.deltaY || 0
+        deltaX: this.toSafeScrollDelta(message.deltaX),
+        deltaY: this.toSafeScrollDelta(message.deltaY)
       });
       return;
     }
@@ -268,6 +311,25 @@ export class BrowserSession {
     if (message.type === "key") {
       await this.handleKey(message);
     }
+  }
+
+  toSafePoint(message) {
+    if (!isFiniteNumber(message.x) || !isFiniteNumber(message.y)) {
+      return null;
+    }
+
+    return {
+      x: clamp(Math.round(message.x), 0, VIEWPORT.width),
+      y: clamp(Math.round(message.y), 0, VIEWPORT.height)
+    };
+  }
+
+  toSafeScrollDelta(value) {
+    if (!isFiniteNumber(value)) {
+      return 0;
+    }
+
+    return clamp(value, -MAX_SCROLL_DELTA, MAX_SCROLL_DELTA);
   }
 
   async handleKey(message) {

@@ -20,6 +20,8 @@ type BrowserStatus = {
   containerId: string | null;
   cdpPort: string | null;
   currentUrl: string;
+  dockerSocket: string;
+  imageTag: string;
   viewport: {
     width: number;
     height: number;
@@ -37,6 +39,8 @@ const DEFAULT_STATUS: BrowserStatus = {
   containerId: null,
   cdpPort: null,
   currentUrl: "https://example.com",
+  dockerSocket: "local Docker socket",
+  imageTag: "bld-remote-chromium:local",
   viewport: {
     width: 1365,
     height: 768
@@ -68,6 +72,7 @@ export function BrowserConsole() {
 
   const busy = status.state === "starting" || status.state === "stopping";
   const running = status.state === "running";
+  const shortContainerId = status.containerId ? status.containerId.slice(0, 12) : "none";
 
   useEffect(() => {
     let closedByEffect = false;
@@ -125,26 +130,34 @@ export function BrowserConsole() {
   }, []);
 
   async function startBrowser() {
-    setNotice("Starting Chromium. First run may build the Docker image.");
-    const response = await fetch("/api/browser/start", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ url })
-    });
-    const nextStatus = await response.json();
-    setStatus(nextStatus);
-    setNotice(response.ok ? null : nextStatus.error || "Failed to start browser");
+    try {
+      setNotice("Starting Chromium. First run may build the Docker image.");
+      const response = await fetch("/api/browser/start", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ url })
+      });
+      const nextStatus = await response.json();
+      setStatus(nextStatus);
+      setNotice(response.ok ? null : nextStatus.error || "Failed to start browser");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Failed to reach the local server");
+    }
   }
 
   async function stopBrowser() {
-    setNotice("Stopping browser container.");
-    const response = await fetch("/api/browser/stop", { method: "POST" });
-    const nextStatus = await response.json();
-    setStatus(nextStatus);
-    setFrame(null);
-    setNotice(response.ok ? null : nextStatus.error || "Failed to stop browser");
+    try {
+      setNotice("Stopping browser container.");
+      const response = await fetch("/api/browser/stop", { method: "POST" });
+      const nextStatus = await response.json();
+      setStatus(nextStatus);
+      setFrame(null);
+      setNotice(response.ok ? null : nextStatus.error || "Failed to stop browser");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Failed to reach the local server");
+    }
   }
 
   function send(message: unknown) {
@@ -298,6 +311,12 @@ export function BrowserConsole() {
           </span>
         </div>
 
+        <div className="session-strip" aria-label="Browser session details">
+          <span>Image: {status.imageTag}</span>
+          <span>Container: {shortContainerId}</span>
+          <span>CDP Port: {status.cdpPort || "none"}</span>
+        </div>
+
         {(notice || status.error) && (
           <div className="notice">
             <AlertCircle aria-hidden="true" size={16} />
@@ -328,4 +347,3 @@ export function BrowserConsole() {
     </main>
   );
 }
-
