@@ -306,6 +306,34 @@ export class BrowserSession {
       return;
     }
 
+    if (message.type === "mouse.down") {
+      const point = this.toSafePoint(message);
+
+      if (!point) {
+        return;
+      }
+
+      await this.page.mouse.move(point.x, point.y);
+      await this.page.mouse.down({
+        button: message.button || "left"
+      });
+      return;
+    }
+
+    if (message.type === "mouse.up") {
+      const point = this.toSafePoint(message);
+
+      if (!point) {
+        return;
+      }
+
+      await this.page.mouse.move(point.x, point.y);
+      await this.page.mouse.up({
+        button: message.button || "left"
+      });
+      return;
+    }
+
     if (message.type === "mouse.move") {
       const point = this.toSafePoint(message);
 

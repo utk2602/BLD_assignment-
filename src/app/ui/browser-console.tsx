@@ -77,6 +77,7 @@ export function BrowserConsole() {
   const [isNavigating, setIsNavigating] = useState(false);
   const socketRef = useRef<WebSocket | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
+  const pointerDownRef = useRef(false);
 
   const busy = status.state === "starting" || status.state === "stopping";
   const running = status.state === "running";
@@ -258,8 +259,25 @@ export function BrowserConsole() {
     const point = toBrowserPoint(event);
 
     if (point) {
-      send({ type: "mouse.click", ...point, button: "left" });
+      pointerDownRef.current = true;
+      event.currentTarget.setPointerCapture(event.pointerId);
+      send({ type: "mouse.down", ...point, button: "left" });
     }
+  }
+
+  function handlePointerUp(event: PointerEvent<HTMLDivElement>) {
+    if (!running || !frame || !pointerDownRef.current) {
+      return;
+    }
+
+    const point = toBrowserPoint(event);
+
+    if (point) {
+      send({ type: "mouse.up", ...point, button: "left" });
+    }
+
+    pointerDownRef.current = false;
+    event.currentTarget.releasePointerCapture(event.pointerId);
   }
 
   function handleWheel(event: WheelEvent<HTMLDivElement>) {
@@ -386,6 +404,7 @@ export function BrowserConsole() {
           onKeyDown={handleKeyDown}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
           onWheel={handleWheel}
           ref={viewportRef}
           tabIndex={0}
