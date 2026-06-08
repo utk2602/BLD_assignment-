@@ -101,6 +101,18 @@ wss.on("connection", (socket) => {
         return;
       }
 
+      if (message.type === "history.back") {
+        const status = await browserSession.goBack();
+        sendToClient(socket, { type: "status", status });
+        return;
+      }
+
+      if (message.type === "history.forward") {
+        const status = await browserSession.goForward();
+        sendToClient(socket, { type: "status", status });
+        return;
+      }
+
       await browserSession.handleInput(message);
     } catch (error) {
       sendToClient(socket, {

@@ -3,6 +3,8 @@
 import {
   AlertCircle,
   Activity,
+  ArrowLeft,
+  ArrowRight,
   Globe2,
   Keyboard,
   Loader2,
@@ -362,6 +364,13 @@ export function BrowserConsole() {
     });
   }
 
+  function handleHistory(direction: "back" | "forward") {
+    setIsNavigating(true);
+    send({
+      type: direction === "back" ? "history.back" : "history.forward"
+    });
+  }
+
   return (
     <main className="app-shell">
       <section className="workspace">
@@ -385,6 +394,15 @@ export function BrowserConsole() {
             <button className="secondary-action" disabled={busy || status.state === "idle"} onClick={stopBrowser} type="button">
               <Square aria-hidden="true" size={16} />
               Stop
+            </button>
+          </div>
+
+          <div className="history-actions">
+            <button className="icon-action" disabled={!running || isNavigating} onClick={() => handleHistory("back")} title="Go back" type="button">
+              <ArrowLeft aria-hidden="true" size={16} />
+            </button>
+            <button className="icon-action" disabled={!running || isNavigating} onClick={() => handleHistory("forward")} title="Go forward" type="button">
+              <ArrowRight aria-hidden="true" size={16} />
             </button>
           </div>
 

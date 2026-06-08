@@ -124,7 +124,7 @@ h1 {
 
 .toolbar {
   display: grid;
-  grid-template-columns: auto minmax(280px, 1fr) auto;
+  grid-template-columns: auto auto minmax(280px, 1fr) auto;
   gap: 12px;
 }
 
@@ -133,6 +133,11 @@ h1 {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.history-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .primary-action,
@@ -322,7 +327,7 @@ h1 {
 
 @media (max-width: 780px) {
   .toolbar {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr auto auto;
   }
 
   .control-row {

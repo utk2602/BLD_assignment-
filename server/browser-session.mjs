@@ -295,6 +295,38 @@ export class BrowserSession {
     return this.getStatus();
   }
 
+  async goBack() {
+    if (!this.page || this.state !== "running") {
+      return this.getStatus();
+    }
+
+    await this.page.goBack({
+      waitUntil: "domcontentloaded",
+      timeout: 20_000
+    }).catch(() => null);
+    this.currentUrl = this.page.url();
+    await this.capturePageMetadata();
+
+    this.onStatus?.(this.getStatus());
+    return this.getStatus();
+  }
+
+  async goForward() {
+    if (!this.page || this.state !== "running") {
+      return this.getStatus();
+    }
+
+    await this.page.goForward({
+      waitUntil: "domcontentloaded",
+      timeout: 20_000
+    }).catch(() => null);
+    this.currentUrl = this.page.url();
+    await this.capturePageMetadata();
+
+    this.onStatus?.(this.getStatus());
+    return this.getStatus();
+  }
+
   async capturePageMetadata() {
     if (!this.page) {
       return;
