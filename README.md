@@ -74,6 +74,27 @@ $env:BROWSER_WIDTH="1440"; $env:BROWSER_HEIGHT="900"; npm run dev
 - Type into a focused input on the remote page.
 - Click **Stop** and confirm the session returns to idle.
 
+## Screen Recording Flow
+
+For the submission video, a simple flow is enough:
+
+1. Show the app open at `localhost:3000`.
+2. Click **Start Browser**.
+3. Wait until the Chromium page appears.
+4. Use the URL bar to open a page with an input, such as a search page.
+5. Click inside the streamed page.
+6. Type, paste, scroll, reload, and use back/forward once.
+7. Click **Stop**.
+
+Keep the recording focused on the working behavior. The form can explain the technical decisions separately.
+
+## Troubleshooting
+
+- If starting fails with a Docker socket or named pipe error, start Docker Desktop and try again.
+- If the first start is slow, the Chromium Docker image is probably building.
+- If typing does nothing, click once inside the browser viewport so it receives keyboard focus.
+- If the stream stops after refreshing the UI, wait a moment for the WebSocket reconnect.
+
 ## Local Health Check
 
 The server exposes a small health endpoint:
