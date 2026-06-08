@@ -7,6 +7,7 @@ const CONTAINER_PORT = "9222/tcp";
 const DEFAULT_URL = "https://example.com";
 const MAX_SCROLL_DELTA = 1800;
 const MODIFIER_KEYS = ["Control", "Alt", "Shift", "Meta"];
+const CONTAINER_LABEL = "teambld.remote-browser";
 
 function envInt(name, fallback) {
   const value = Number(process.env[name]);
@@ -129,6 +130,21 @@ async function ensureBrowserImage() {
   }
 }
 
+async function cleanupStaleContainers() {
+  const containers = await docker.listContainers({
+    all: true,
+    filters: {
+      label: [CONTAINER_LABEL]
+    }
+  });
+
+  for (const info of containers) {
+    const container = docker.getContainer(info.Id);
+    await container.stop({ t: 1 }).catch(() => {});
+    await container.remove({ force: true }).catch(() => {});
+  }
+}
+
 async function waitForCdp(port) {
   const endpoint = `http://127.0.0.1:${port}/json/version`;
   const started = Date.now();
@@ -198,10 +214,14 @@ export class BrowserSession {
 
     try {
       await ensureBrowserImage();
+      await cleanupStaleContainers();
 
       this.container = await docker.createContainer({
         Image: IMAGE_TAG,
         name: `bld-remote-browser-${Date.now()}`,
+        Labels: {
+          [CONTAINER_LABEL]: "true"
+        },
         ExposedPorts: {
           [CONTAINER_PORT]: {}
         },
