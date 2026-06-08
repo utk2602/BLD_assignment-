@@ -34,6 +34,18 @@ Install dependencies:
 npm install
 ```
 
+Copy the environment example if you want to customize ports or viewport size:
+
+```bash
+cp .env.example .env.local
+```
+
+On Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env.local
+```
+
 Optional: pre-build the browser image before recording:
 
 ```bash
@@ -58,7 +70,7 @@ Optional viewport override:
 BROWSER_WIDTH=1440 BROWSER_HEIGHT=900 npm run dev
 ```
 
-On Windows PowerShell:
+Or set the same values in Windows PowerShell:
 
 ```powershell
 $env:BROWSER_WIDTH="1440"; $env:BROWSER_HEIGHT="900"; npm run dev

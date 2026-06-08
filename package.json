@@ -7,7 +7,7 @@
     "dev": "node server.mjs",
     "build": "next build",
     "browser:build": "docker build -f Dockerfile.browser -t bld-remote-chromium:local .",
-    "start": "NODE_ENV=production node server.mjs",
+    "start": "node server.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

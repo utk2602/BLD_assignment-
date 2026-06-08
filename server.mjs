@@ -4,8 +4,9 @@ import { WebSocketServer } from "ws";
 import { BrowserSession } from "./server/browser-session.mjs";
 import { readJson, sendJson } from "./server/http-utils.mjs";
 
-const dev = process.env.NODE_ENV !== "production";
-const hostname = process.env.HOSTNAME || "localhost";
+const isStartScript = process.env.npm_lifecycle_event === "start";
+const dev = process.env.NODE_ENV ? process.env.NODE_ENV !== "production" : !isStartScript;
+const hostname = process.env.HOST || "localhost";
 const port = Number(process.env.PORT || 3000);
 const HEARTBEAT_INTERVAL_MS = 15_000;
 
