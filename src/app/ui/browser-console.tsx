@@ -78,6 +78,8 @@ export function BrowserConsole() {
   const socketRef = useRef<WebSocket | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const pointerDownRef = useRef(false);
+  const pendingMoveRef = useRef<{ x: number; y: number } | null>(null);
+  const moveFrameRef = useRef<number | null>(null);
 
   const busy = status.state === "starting" || status.state === "stopping";
   const running = status.state === "running";
@@ -165,6 +167,10 @@ export function BrowserConsole() {
         clearTimeout(reconnectTimer);
       }
 
+      if (moveFrameRef.current) {
+        cancelAnimationFrame(moveFrameRef.current);
+      }
+
       socketRef.current?.close();
     };
   }, []);
@@ -245,8 +251,21 @@ export function BrowserConsole() {
 
     const point = toBrowserPoint(event);
 
-    if (point) {
-      send({ type: "mouse.move", ...point });
+    if (!point) {
+      return;
+    }
+
+    pendingMoveRef.current = point;
+
+    if (!moveFrameRef.current) {
+      moveFrameRef.current = requestAnimationFrame(() => {
+        moveFrameRef.current = null;
+        const nextPoint = pendingMoveRef.current;
+
+        if (nextPoint) {
+          send({ type: "mouse.move", ...nextPoint });
+        }
+      });
     }
   }
 
