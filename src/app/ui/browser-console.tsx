@@ -355,6 +355,13 @@ export function BrowserConsole() {
     });
   }
 
+  function handleReload() {
+    setIsNavigating(true);
+    send({
+      type: "reload"
+    });
+  }
+
   return (
     <main className="app-shell">
       <section className="workspace">
@@ -398,6 +405,9 @@ export function BrowserConsole() {
               )}
             </button>
           </form>
+          <button className="icon-action" disabled={!running || isNavigating} onClick={handleReload} title="Reload page" type="button">
+            <RefreshCcw aria-hidden="true" size={16} />
+          </button>
         </div>
 
         <div className="meta-strip">

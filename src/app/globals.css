@@ -124,7 +124,7 @@ h1 {
 
 .toolbar {
   display: grid;
-  grid-template-columns: auto minmax(280px, 1fr);
+  grid-template-columns: auto minmax(280px, 1fr) auto;
   gap: 12px;
 }
 
@@ -137,6 +137,7 @@ h1 {
 
 .primary-action,
 .secondary-action,
+.icon-action,
 .url-bar button {
   display: inline-flex;
   min-height: 42px;
@@ -148,6 +149,18 @@ h1 {
   padding: 0 16px;
   cursor: pointer;
   font-weight: 800;
+}
+
+.icon-action {
+  width: 42px;
+  border-color: var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  padding: 0;
+}
+
+.icon-action:hover:not(:disabled) {
+  border-color: var(--line-strong);
 }
 
 .primary-action {
@@ -309,7 +322,11 @@ h1 {
 
 @media (max-width: 780px) {
   .toolbar {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr auto;
+  }
+
+  .control-row {
+    grid-column: 1 / -1;
   }
 }
 

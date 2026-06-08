@@ -95,6 +95,12 @@ wss.on("connection", (socket) => {
         return;
       }
 
+      if (message.type === "reload") {
+        const status = await browserSession.reload();
+        sendToClient(socket, { type: "status", status });
+        return;
+      }
+
       await browserSession.handleInput(message);
     } catch (error) {
       sendToClient(socket, {

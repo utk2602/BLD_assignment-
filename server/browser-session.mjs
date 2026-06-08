@@ -279,6 +279,22 @@ export class BrowserSession {
     return this.getStatus();
   }
 
+  async reload() {
+    if (!this.page || this.state !== "running") {
+      return this.getStatus();
+    }
+
+    await this.page.reload({
+      waitUntil: "domcontentloaded",
+      timeout: 20_000
+    });
+    this.currentUrl = this.page.url();
+    await this.capturePageMetadata();
+
+    this.onStatus?.(this.getStatus());
+    return this.getStatus();
+  }
+
   async capturePageMetadata() {
     if (!this.page) {
       return;
