@@ -272,7 +272,11 @@ export function BrowserConsole() {
     event.preventDefault();
     send({
       type: "key",
-      key: event.key
+      key: event.key,
+      altKey: event.altKey,
+      ctrlKey: event.ctrlKey,
+      metaKey: event.metaKey,
+      shiftKey: event.shiftKey
     });
   }
 
@@ -336,7 +340,7 @@ export function BrowserConsole() {
           </span>
           <span>
             <Keyboard aria-hidden="true" size={15} />
-            Click viewport before typing
+            Click viewport before typing or shortcuts
           </span>
         </div>
 

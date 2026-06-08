@@ -7,6 +7,7 @@ const CONTAINER_PORT = "9222/tcp";
 const DEFAULT_URL = "https://example.com";
 const VIEWPORT = { width: 1365, height: 768 };
 const MAX_SCROLL_DELTA = 1800;
+const MODIFIER_KEYS = ["Control", "Alt", "Shift", "Meta"];
 
 function dockerSocketPath() {
   if (process.env.DOCKER_SOCKET) {
@@ -339,6 +340,17 @@ export class BrowserSession {
       return;
     }
 
+    if (MODIFIER_KEYS.includes(key)) {
+      return;
+    }
+
+    const modifiers = this.toPressedModifiers(message);
+
+    if (modifiers.length > 0) {
+      await this.pressWithModifiers(key, modifiers);
+      return;
+    }
+
     if (key.length === 1) {
       await this.page.keyboard.type(key);
       return;
@@ -362,6 +374,29 @@ export class BrowserSession {
 
     if (supportedKeys.has(key)) {
       await this.page.keyboard.press(key);
+    }
+  }
+
+  toPressedModifiers(message) {
+    return [
+      message.ctrlKey ? "Control" : null,
+      message.altKey ? "Alt" : null,
+      message.shiftKey ? "Shift" : null,
+      message.metaKey ? "Meta" : null
+    ].filter(Boolean);
+  }
+
+  async pressWithModifiers(key, modifiers) {
+    for (const modifier of modifiers) {
+      await this.page.keyboard.down(modifier);
+    }
+
+    try {
+      await this.page.keyboard.press(key);
+    } finally {
+      for (const modifier of [...modifiers].reverse()) {
+        await this.page.keyboard.up(modifier);
+      }
     }
   }
 
