@@ -2,6 +2,7 @@
 
 import {
   AlertCircle,
+  Activity,
   Globe2,
   Keyboard,
   Loader2,
@@ -67,6 +68,8 @@ export function BrowserConsole() {
   const [url, setUrl] = useState(DEFAULT_STATUS.currentUrl);
   const [socketState, setSocketState] = useState("Disconnected");
   const [notice, setNotice] = useState<string | null>(null);
+  const [framesReceived, setFramesReceived] = useState(0);
+  const [lastFrameAt, setLastFrameAt] = useState<string>("never");
   const socketRef = useRef<WebSocket | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
 
@@ -76,56 +79,82 @@ export function BrowserConsole() {
 
   useEffect(() => {
     let closedByEffect = false;
-    const ws = new WebSocket(socketUrl());
-    socketRef.current = ws;
-    setSocketState("Connecting");
+    let retryDelay = 500;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
-    ws.addEventListener("open", () => {
-      setSocketState("Connected");
-    });
+    const readStatus = () => {
+      fetch("/api/browser/status")
+        .then((response) => response.json())
+        .then((nextStatus) => setStatus(nextStatus))
+        .catch(() => setNotice("Could not read browser status"));
+    };
 
-    ws.addEventListener("message", (event) => {
-      const message = JSON.parse(event.data);
+    const connect = () => {
+      const ws = new WebSocket(socketUrl());
+      socketRef.current = ws;
+      setSocketState(retryDelay === 500 ? "Connecting" : "Reconnecting");
 
-      if (message.type === "status") {
-        setStatus(message.status);
-        setUrl(message.status.currentUrl || DEFAULT_STATUS.currentUrl);
-        return;
-      }
+      ws.addEventListener("open", () => {
+        retryDelay = 500;
+        setSocketState("Connected");
+        readStatus();
+      });
 
-      if (message.type === "frame") {
-        const metadata = message.metadata as FrameMetadata;
-        setFrame(`data:image/jpeg;base64,${message.data}`);
-        setFrameSize({
-          width: metadata.deviceWidth || DEFAULT_STATUS.viewport.width,
-          height: metadata.deviceHeight || DEFAULT_STATUS.viewport.height
-        });
-        return;
-      }
+      ws.addEventListener("message", (event) => {
+        try {
+          const message = JSON.parse(event.data);
 
-      if (message.type === "error") {
-        setNotice(message.error);
-      }
-    });
+          if (message.type === "status") {
+            setStatus(message.status);
+            setUrl(message.status.currentUrl || DEFAULT_STATUS.currentUrl);
+            return;
+          }
 
-    ws.addEventListener("close", () => {
-      if (!closedByEffect) {
-        setSocketState("Disconnected");
-      }
-    });
+          if (message.type === "frame") {
+            const metadata = message.metadata as FrameMetadata;
+            setFrame(`data:image/jpeg;base64,${message.data}`);
+            setFrameSize({
+              width: metadata.deviceWidth || DEFAULT_STATUS.viewport.width,
+              height: metadata.deviceHeight || DEFAULT_STATUS.viewport.height
+            });
+            setFramesReceived((count) => count + 1);
+            setLastFrameAt(new Date().toLocaleTimeString());
+            return;
+          }
 
-    ws.addEventListener("error", () => {
-      setSocketState("Disconnected");
-    });
+          if (message.type === "error") {
+            setNotice(message.error);
+          }
+        } catch {
+          setNotice("Received an invalid WebSocket message");
+        }
+      });
 
-    fetch("/api/browser/status")
-      .then((response) => response.json())
-      .then((nextStatus) => setStatus(nextStatus))
-      .catch(() => setNotice("Could not read browser status"));
+      ws.addEventListener("close", () => {
+        if (closedByEffect) {
+          return;
+        }
+
+        setSocketState("Reconnecting");
+        reconnectTimer = setTimeout(connect, retryDelay);
+        retryDelay = Math.min(retryDelay * 1.6, 4000);
+      });
+
+      ws.addEventListener("error", () => {
+        ws.close();
+      });
+    };
+
+    connect();
 
     return () => {
       closedByEffect = true;
-      ws.close();
+
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+      }
+
+      socketRef.current?.close();
     };
   }, []);
 
@@ -315,6 +344,11 @@ export function BrowserConsole() {
           <span>Image: {status.imageTag}</span>
           <span>Container: {shortContainerId}</span>
           <span>CDP Port: {status.cdpPort || "none"}</span>
+          <span>
+            <Activity aria-hidden="true" size={14} />
+            Frames: {framesReceived}
+          </span>
+          <span>Last Frame: {lastFrameAt}</span>
         </div>
 
         {(notice || status.error) && (

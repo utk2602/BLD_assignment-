@@ -7,6 +7,7 @@ import { readJson, sendJson } from "./server/http-utils.mjs";
 const dev = process.env.NODE_ENV !== "production";
 const hostname = process.env.HOSTNAME || "localhost";
 const port = Number(process.env.PORT || 3000);
+const HEARTBEAT_INTERVAL_MS = 15_000;
 
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
@@ -73,10 +74,15 @@ const server = http.createServer(async (req, res) => {
 const wss = new WebSocketServer({ noServer: true });
 
 wss.on("connection", (socket) => {
+  socket.isAlive = true;
   clients.add(socket);
   sendToClient(socket, {
     type: "status",
     status: browserSession.getStatus()
+  });
+
+  socket.on("pong", () => {
+    socket.isAlive = true;
   });
 
   socket.on("message", async (raw) => {
@@ -103,6 +109,19 @@ wss.on("connection", (socket) => {
   });
 });
 
+const heartbeat = setInterval(() => {
+  for (const socket of clients) {
+    if (!socket.isAlive) {
+      clients.delete(socket);
+      socket.terminate();
+      continue;
+    }
+
+    socket.isAlive = false;
+    socket.ping();
+  }
+}, HEARTBEAT_INTERVAL_MS);
+
 server.on("upgrade", (req, socket, head) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
@@ -117,6 +136,8 @@ server.on("upgrade", (req, socket, head) => {
 });
 
 async function shutdown() {
+  clearInterval(heartbeat);
+  wss.close();
   await browserSession.stop({ quiet: true });
   process.exit(0);
 }
